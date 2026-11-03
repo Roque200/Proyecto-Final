@@ -21,8 +21,7 @@ dependencies:
   vibration: ^3.1.0
   sensors_plus: ^7.0.0
 
-  # Tema, tipografía y preferencias locales
-  google_fonts: ^6.2.1
+  # Preferencias locales (tema y onboarding)
   shared_preferences: ^2.3.3
 
   # Menú circular para cambiar el tema (el mismo que en clase)
@@ -35,3 +34,20 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Tipografía local: funciona sin internet desde el primer arranque.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Nunito-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Nunito-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Nunito-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Nunito-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Nunito-Black.ttf
+          weight: 900
