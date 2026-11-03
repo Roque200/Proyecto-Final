@@ -131,6 +131,7 @@ class ExplorarProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _explorador.cancelar();
     _giro?.cancel();
     _agitar.detener();
     Voz.callar();

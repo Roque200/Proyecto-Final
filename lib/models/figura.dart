@@ -47,8 +47,17 @@ class Figura {
   static const double _tolLado = 0.04;
   static const Offset _centro = Offset(0.5, 0.5);
 
+  /// Una vez que el dedo "agarró" un lado o vértice, se le da más margen
+  /// para soltarlo. Así el temblor normal del dedo no lo hace brincar
+  /// entre "lado" e "interior" a cada milímetro (histéresis).
+  static const double _margenSalida = 1.8;
+
   /// Recibe el punto ya normalizado y sin rotación.
-  ElementoFigura elementoEn(Offset p) {
+  /// [actual] es el elemento donde estaba el dedo en el toque anterior.
+  ElementoFigura elementoEn(Offset p, {ElementoFigura? actual}) {
+    final sostenido = _sigueEn(p, actual);
+    if (sostenido != null) return sostenido;
+
     if (esCirculo) {
       final d = (p - _centro).distance;
       if ((d - radio).abs() <= _tolLado) {
@@ -83,6 +92,35 @@ class Figura {
           TipoElemento.interior, 0, 'Dentro $articuloDel $nombre');
     }
     return const ElementoFigura(TipoElemento.fuera, 0, 'Fuera de la figura');
+  }
+
+  /// Si el dedo sigue cerca del elemento anterior (con margen extra), lo mantiene.
+  ElementoFigura? _sigueEn(Offset p, ElementoFigura? actual) {
+    if (actual == null) return null;
+
+    if (esCirculo) {
+      if (actual.tipo != TipoElemento.lado) return null;
+      final d = (p - _centro).distance;
+      return (d - radio).abs() <= _tolLado * _margenSalida ? actual : null;
+    }
+
+    final i = actual.indice;
+    if (i >= vertices.length) return null;
+
+    if (actual.tipo == TipoElemento.vertice) {
+      return (p - vertices[i]).distance <= _tolVertice * _margenSalida ? actual : null;
+    }
+
+    if (actual.tipo == TipoElemento.lado) {
+      // Si se acerca a un vértice, el vértice tiene prioridad.
+      for (final v in vertices) {
+        if ((p - v).distance <= _tolVertice) return null;
+      }
+      final a = vertices[i];
+      final b = vertices[(i + 1) % vertices.length];
+      return _distanciaASegmento(p, a, b) <= _tolLado * _margenSalida ? actual : null;
+    }
+    return null;
   }
 
   String get articuloDel => articulo == 'el' ? 'del' : 'de la';
