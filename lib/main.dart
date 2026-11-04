@@ -5,10 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'components/voz.dart';
 import 'pages/explorar_page.dart';
 import 'pages/menu_alumno_page.dart';
+import 'pages/reto_page.dart';
 import 'providers/explorar_provider.dart';
 import 'providers/menu_alumno_provider.dart';
 import 'providers/plan_provider.dart';
 import 'providers/progreso_provider.dart';
+import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
 
 Future<void> main() async {
@@ -61,8 +63,15 @@ class MyApp extends StatelessWidget {
             child: const ExplorarPage(),
           );
         },
+        '/reto': (context) => ChangeNotifierProvider(
+          create: (ctx) => RetoProvider(
+            figuras: ctx.read<PlanProvider>().figurasDisponibles,
+            alResponder: ctx.read<ProgresoProvider>().registrarReto,
+          )..iniciar(),
+          child: const RetoPage(),
+        ),
       },
-      // Rutas que todavía no existen (retos, pantallas del tutor...)
+      // Rutas que todavía no existen (pantallas del tutor...)
       onUnknownRoute: (settings) => MaterialPageRoute(
         settings: settings,
         builder: (context) => EnConstruccion(ruta: settings.name ?? ''),
