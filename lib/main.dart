@@ -8,15 +8,18 @@ import 'pages/menu_alumno_page.dart';
 import 'pages/reto_page.dart';
 import 'providers/explorar_provider.dart';
 import 'providers/menu_alumno_provider.dart';
+import 'providers/onboarding_provider.dart';
 import 'providers/plan_provider.dart';
 import 'providers/progreso_provider.dart';
 import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
+import 'screens/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   await Voz.inicializar();
+  final onboardingVisto = prefs.getBool(OnboardingProvider.claveVisto) ?? false;
 
   runApp(
     MultiProvider(
@@ -26,13 +29,15 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ProgresoProvider()),
         ChangeNotifierProvider(create: (_) => PlanProvider()),
       ],
-      child: const MyApp(),
+      child: MyApp(rutaInicial: onboardingVisto ? '/' : '/onboarding'),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String rutaInicial;
+
+  const MyApp({super.key, required this.rutaInicial});
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +49,15 @@ class MyApp extends StatelessWidget {
       theme: tema.temaClaro,
       darkTheme: tema.temaOscuro,
       themeMode: tema.themeMode,
-      initialRoute: '/',
+      initialRoute: rutaInicial,
       routes: {
+        '/onboarding': (context) => ChangeNotifierProvider(
+          // Mientras no existe el login, al terminar regresa al inicio.
+          create: (ctx) =>
+              OnboardingProvider(ctx.read<SharedPreferences>(), destino: '/')
+                ..narrarActual(),
+          child: const OnboardingScreen(),
+        ),
         '/': (context) => const InicioProvisional(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
@@ -108,6 +120,14 @@ class InicioProvisional extends StatelessWidget {
                 icon: const Icon(Icons.pan_tool_alt),
                 label: const Text('Ir directo a explorar'),
                 onPressed: () => Navigator.pushNamed(context, '/explorar'),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                icon: const Icon(Icons.replay),
+                label: const Text('Ver la bienvenida otra vez'),
+                // Reemplaza el inicio para que no se acumulen pantallas.
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/onboarding'),
               ),
             ],
           ),
