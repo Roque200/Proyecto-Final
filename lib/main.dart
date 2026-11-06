@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'components/menu_tema.dart';
+import 'components/responsivo.dart';
 import 'components/voz.dart';
 import 'pages/explorar_page.dart';
 import 'pages/menu_alumno_page.dart';
@@ -100,9 +102,10 @@ class InicioProvisional extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Pulssó')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      // Menú circular para cambiar entre tema claro, oscuro y alto contraste.
+      body: MenuTema(
+        // En tablet o escritorio el contenido no se estira de lado a lado.
+        contenido: ContenidoCentrado(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
