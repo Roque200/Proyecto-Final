@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "896730408938",
+    "project_id": "pulsso-4dd5f",
+    "storage_bucket": "pulsso-4dd5f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896730408938:android:4af8a43a3230a2e0cd3493",
+        "android_client_info": {
+          "package_name": "com.roque200.pulsso"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzAdIjLhS4h4aYlVPmgeoqjaH2huTpwD0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

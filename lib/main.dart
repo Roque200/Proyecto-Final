@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'components/menu_tema.dart';
 import 'components/responsivo.dart';
 import 'components/voz.dart';
+import 'firebase_options.dart';
 import 'pages/explorar_page.dart';
 import 'pages/menu_alumno_page.dart';
 import 'pages/reto_page.dart';
@@ -19,6 +21,9 @@ import 'screens/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Conecta la app con el proyecto pulsso-4dd5f (configuración generada
+  // por flutterfire configure en firebase_options.dart).
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final prefs = await SharedPreferences.getInstance();
   await Voz.inicializar();
   final onboardingVisto = prefs.getBool(OnboardingProvider.claveVisto) ?? false;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDYb-Dw3YN26FfxbDRmWWh6ZOhLJGCdE90</string>
+	<key>GCM_SENDER_ID</key>
+	<string>896730408938</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.roque200.pulsso</string>
+	<key>PROJECT_ID</key>
+	<string>pulsso-4dd5f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>pulsso-4dd5f.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:896730408938:ios:00adf652c349f8f8cd3493</string>
+</dict>
+</plist>
