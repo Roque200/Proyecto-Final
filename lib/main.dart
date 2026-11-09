@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'pages/explorar_page.dart';
 import 'pages/menu_alumno_page.dart';
 import 'pages/reto_page.dart';
+import 'providers/auth_provider.dart';
 import 'providers/explorar_provider.dart';
 import 'providers/menu_alumno_provider.dart';
 import 'providers/onboarding_provider.dart';
@@ -17,7 +18,10 @@ import 'providers/plan_provider.dart';
 import 'providers/progreso_provider.dart';
 import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
+import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/registro_screen.dart';
+import 'screens/verificar_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +37,17 @@ Future<void> main() async {
       providers: [
         Provider<SharedPreferences>.value(value: prefs),
         ChangeNotifierProvider(create: (_) => TemaProvider(prefs)),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProgresoProvider()),
         ChangeNotifierProvider(create: (_) => PlanProvider()),
       ],
-      child: MyApp(rutaInicial: onboardingVisto ? '/' : '/onboarding'),
+      // Si ya vio la bienvenida, arranca según la sesión guardada:
+      // login, verificar correo o inicio.
+      child: MyApp(
+        rutaInicial: onboardingVisto
+            ? AuthProvider.rutaInicial()
+            : '/onboarding',
+      ),
     ),
   );
 }
@@ -59,12 +70,16 @@ class MyApp extends StatelessWidget {
       initialRoute: rutaInicial,
       routes: {
         '/onboarding': (context) => ChangeNotifierProvider(
-          // Mientras no existe el login, al terminar regresa al inicio.
-          create: (ctx) =>
-              OnboardingProvider(ctx.read<SharedPreferences>(), destino: '/')
-                ..narrarActual(),
+          // Al terminar va al login, o al inicio si ya hay sesión.
+          create: (ctx) => OnboardingProvider(
+            ctx.read<SharedPreferences>(),
+            destino: AuthProvider.rutaInicial(),
+          )..narrarActual(),
           child: const OnboardingScreen(),
         ),
+        '/login': (context) => const LoginScreen(),
+        '/registro': (context) => const RegistroScreen(),
+        '/verificar': (context) => const VerificarScreen(),
         '/': (context) => const InicioProvisional(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
@@ -105,8 +120,19 @@ class InicioProvisional extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Pulssó')),
+      appBar: AppBar(
+        title: Text('Hola, ${auth.usuario?.nombre ?? 'tutor'}'),
+        actions: [
+          IconButton(
+            tooltip: 'Cerrar sesión',
+            icon: const Icon(Icons.logout),
+            onPressed: () => auth.cerrarSesion(context),
+          ),
+        ],
+      ),
       // Menú circular para cambiar entre tema claro, oscuro y alto contraste.
       body: MenuTema(
         // En tablet o escritorio el contenido no se estira de lado a lado.
