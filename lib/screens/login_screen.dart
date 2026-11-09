@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../components/boton_social.dart';
 import '../components/campo_texto.dart';
 import '../components/responsivo.dart';
 import '../providers/auth_provider.dart';
@@ -80,6 +81,23 @@ class LoginScreen extends StatelessWidget {
                         )
                       : const Text('Entrar'),
                 ),
+              ),
+              const SizedBox(height: 20),
+              const Row(
+                children: [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('o entra con'),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 12),
+              BotonSocial(
+                texto: 'Google',
+                icono: Icons.g_mobiledata,
+                alPresionar: auth.cargando ? null : () => auth.entrarConGoogle(context),
               ),
               const SizedBox(height: 16),
               Row(

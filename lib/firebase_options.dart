@@ -56,13 +56,14 @@ class DefaultFirebaseOptions {
     projectId: 'pulsso-4dd5f',
     storageBucket: 'pulsso-4dd5f.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDYb-Dw3YN26FfxbDRmWWh6ZOhLJGCdE90',
     appId: '1:896730408938:ios:00adf652c349f8f8cd3493',
     messagingSenderId: '896730408938',
     projectId: 'pulsso-4dd5f',
     storageBucket: 'pulsso-4dd5f.firebasestorage.app',
+    androidClientId: '896730408938-akvaccrtmuisbo247btd35bju4bq9aat.apps.googleusercontent.com',
+    iosClientId: '896730408938-jmr1vkvirno54l35e7pilj5vc7jmbve7.apps.googleusercontent.com',
     iosBundleId: 'com.roque200.pulsso',
   );
 }

@@ -20,6 +20,7 @@ import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/recuperar_screen.dart';
 import 'screens/registro_screen.dart';
 import 'screens/verificar_screen.dart';
 
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/registro': (context) => const RegistroScreen(),
         '/verificar': (context) => const VerificarScreen(),
+        '/recuperar': (context) => const RecuperarScreen(),
         '/': (context) => const InicioProvisional(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),

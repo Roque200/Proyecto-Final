@@ -12,7 +12,20 @@
           "package_name": "com.roque200.pulsso"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "896730408938-akvaccrtmuisbo247btd35bju4bq9aat.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.roque200.pulsso",
+            "certificate_hash": "8017aa8e4eddaf2ac495bb29811b9533920e297d"
+          }
+        },
+        {
+          "client_id": "896730408938-de2moeo2t6ccfah13m16oarpp5okeren.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCzAdIjLhS4h4aYlVPmgeoqjaH2huTpwD0"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "896730408938-de2moeo2t6ccfah13m16oarpp5okeren.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "896730408938-jmr1vkvirno54l35e7pilj5vc7jmbve7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.roque200.pulsso"
+              }
+            }
+          ]
         }
       }
     }

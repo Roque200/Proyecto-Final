@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import '../firebase_options.dart';
 
 enum Proveedor { correo, google, github }
 
@@ -69,6 +73,8 @@ class AuthProvider extends ChangeNotifier {
 
   bool _cargando = false;
   bool _ocultarPassword = true;
+  bool _correoRecuperacionEnviado = false;
+  bool _googleListo = false;
   int _segundosReenvio = 0;
   Timer? _timer;
 
@@ -101,6 +107,7 @@ class AuthProvider extends ChangeNotifier {
 
   bool get cargando => _cargando;
   bool get ocultarPassword => _ocultarPassword;
+  bool get correoRecuperacionEnviado => _correoRecuperacionEnviado;
   int get segundosReenvio => _segundosReenvio;
   bool get puedeReenviar => _segundosReenvio == 0;
   String? error(String campo) => _errores[campo];
@@ -123,6 +130,7 @@ class AuthProvider extends ChangeNotifier {
     confirmar = '';
     _errores.clear();
     _ocultarPassword = true;
+    _correoRecuperacionEnviado = false;
     notifyListeners();
   }
 
@@ -158,6 +166,12 @@ class AuthProvider extends ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) _mostrar(context, _mensaje(e.code));
       return false;
+    } on GoogleSignInException catch (e) {
+      // Si el tutor cerró la ventana de Google no es un error: no se avisa nada.
+      if (e.code != GoogleSignInExceptionCode.canceled && context.mounted) {
+        _mostrar(context, 'No se pudo entrar con Google');
+      }
+      return false;
     } catch (_) {
       if (context.mounted) _mostrar(context, 'Algo salió mal. Intenta de nuevo.');
       return false;
@@ -177,6 +191,8 @@ class AuthProvider extends ChangeNotifier {
         'email-already-in-use' => 'Ya existe una cuenta con ese correo',
         'weak-password' => 'La contraseña es muy débil',
         'too-many-requests' => 'Demasiados intentos. Espera unos minutos.',
+        'account-exists-with-different-credential' =>
+          'Ese correo ya está registrado con otro método de acceso',
         'network-request-failed' => 'Sin conexión a internet',
         _ => 'No se pudo completar ($codigo)',
       };
@@ -196,6 +212,30 @@ class AuthProvider extends ChangeNotifier {
         email: correo.trim(),
         password: password,
       );
+    });
+    if (ok && context.mounted) _irDespuesDeEntrar(context);
+  }
+
+  /// Inicializa Google Sign-In una sola vez. En iOS necesita el client ID,
+  /// que viene en firebase_options.dart; en Android lo toma solo del
+  /// google-services.json.
+  Future<void> _iniciarGoogle() async {
+    if (_googleListo) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: Platform.isIOS ? DefaultFirebaseOptions.currentPlatform.iosClientId : null,
+    );
+    _googleListo = true;
+  }
+
+  /// Google da un idToken; con él se crea la credencial de Firebase.
+  Future<void> entrarConGoogle(BuildContext context) async {
+    final ok = await _ejecutar(context, () async {
+      await _iniciarGoogle();
+      final cuenta = await GoogleSignIn.instance.authenticate();
+      final credencial = GoogleAuthProvider.credential(
+        idToken: cuenta.authentication.idToken,
+      );
+      await _auth.signInWithCredential(credencial);
     });
     if (ok && context.mounted) _irDespuesDeEntrar(context);
   }
@@ -238,9 +278,28 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Firebase manda un enlace para que el tutor cree una contraseña nueva.
+  Future<void> enviarRecuperacion(BuildContext context) async {
+    if (!_validar(conPassword: false)) return;
+    final ok = await _ejecutar(context, () async {
+      await _auth.sendPasswordResetEmail(email: correo.trim());
+    });
+    if (!ok) return;
+    _correoRecuperacionEnviado = true;
+    notifyListeners();
+  }
+
   Future<void> cerrarSesion(BuildContext context) async {
     _timer?.cancel();
     _segundosReenvio = 0;
+    // Cierra también la sesión de Google para que la próxima vez
+    // deje elegir otra cuenta.
+    if (usuario?.proveedor == Proveedor.google) {
+      try {
+        await _iniciarGoogle();
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
     await _auth.signOut();
     limpiarFormulario();
     if (!context.mounted) return;
