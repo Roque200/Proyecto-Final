@@ -193,6 +193,7 @@ class AuthProvider extends ChangeNotifier {
         'too-many-requests' => 'Demasiados intentos. Espera unos minutos.',
         'account-exists-with-different-credential' =>
           'Ese correo ya está registrado con otro método de acceso',
+        'web-context-canceled' || 'canceled' => 'Se canceló el inicio de sesión',
         'network-request-failed' => 'Sin conexión a internet',
         _ => 'No se pudo completar ($codigo)',
       };
@@ -236,6 +237,16 @@ class AuthProvider extends ChangeNotifier {
         idToken: cuenta.authentication.idToken,
       );
       await _auth.signInWithCredential(credencial);
+    });
+    if (ok && context.mounted) _irDespuesDeEntrar(context);
+  }
+
+  /// GitHub no necesita paquete extra: Firebase abre la página de GitHub
+  /// en el navegador y regresa a la app con la sesión iniciada.
+  Future<void> entrarConGithub(BuildContext context) async {
+    final ok = await _ejecutar(context, () async {
+      final github = GithubAuthProvider()..addScope('read:user')..addScope('user:email');
+      await _auth.signInWithProvider(github);
     });
     if (ok && context.mounted) _irDespuesDeEntrar(context);
   }

@@ -99,6 +99,11 @@ class LoginScreen extends StatelessWidget {
                 icono: Icons.g_mobiledata,
                 alPresionar: auth.cargando ? null : () => auth.entrarConGoogle(context),
               ),
+              BotonSocial(
+                texto: 'GitHub',
+                icono: Icons.code,
+                alPresionar: auth.cargando ? null : () => auth.entrarConGithub(context),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
