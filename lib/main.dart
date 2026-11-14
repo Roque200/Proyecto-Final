@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'components/notificaciones_push.dart';
 import 'components/voz.dart';
 import 'config/supabase_config.dart';
 import 'firebase_options.dart';
@@ -38,6 +39,8 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.publishableKey,
   );
+  // Notificaciones con la app en segundo plano o cerrada.
+  NotificacionesPush.registrarSegundoPlano();
   final prefs = await SharedPreferences.getInstance();
   await Voz.inicializar();
   final onboardingVisto = prefs.getBool(OnboardingProvider.claveVisto) ?? false;
@@ -61,6 +64,9 @@ Future<void> main() async {
       ),
     ),
   );
+
+  // Ya con la app en pantalla: permisos y listener global de push.
+  NotificacionesPush.inicializar();
 }
 
 class MyApp extends StatelessWidget {
@@ -75,6 +81,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Pulssó',
       debugShowCheckedModeBanner: false,
+      // Llaves globales para que las notificaciones puedan mostrar avisos y
+      // abrir pantallas sin importar en cuál esté el tutor.
+      navigatorKey: NotificacionesPush.navigatorKey,
+      scaffoldMessengerKey: NotificacionesPush.messengerKey,
       theme: tema.temaClaro,
       darkTheme: tema.temaOscuro,
       themeMode: tema.themeMode,
