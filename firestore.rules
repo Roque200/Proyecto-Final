@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Reglas de Cloud Firestore de Pulssó.
+// Cada tutor solo puede leer y escribir dentro de su propio documento
+// usuarios/{uid} y sus subcolecciones (progreso, pagos...).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{uid}/{documento=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
