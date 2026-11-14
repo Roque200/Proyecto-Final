@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'components/menu_tema.dart';
-import 'components/responsivo.dart';
 import 'components/voz.dart';
 import 'firebase_options.dart';
 import 'pages/explorar_page.dart';
@@ -18,6 +16,7 @@ import 'providers/plan_provider.dart';
 import 'providers/progreso_provider.dart';
 import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
+import 'screens/dash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/recuperar_screen.dart';
@@ -82,7 +81,8 @@ class MyApp extends StatelessWidget {
         '/registro': (context) => const RegistroScreen(),
         '/verificar': (context) => const VerificarScreen(),
         '/recuperar': (context) => const RecuperarScreen(),
-        '/': (context) => const InicioProvisional(),
+        // Dashboard del tutor: pantalla principal después de iniciar sesión.
+        '/': (context) => const DashScreen(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),
@@ -107,67 +107,10 @@ class MyApp extends StatelessWidget {
           child: const RetoPage(),
         ),
       },
-      // Rutas que todavía no existen (pantallas del tutor...)
+      // Rutas que todavía no existen (perfil, planes, mapa...)
       onUnknownRoute: (settings) => MaterialPageRoute(
         settings: settings,
         builder: (context) => EnConstruccion(ruta: settings.name ?? ''),
-      ),
-    );
-  }
-}
-
-/// Pantalla temporal mientras se construye el dashboard del tutor (semana 2).
-class InicioProvisional extends StatelessWidget {
-  const InicioProvisional({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Hola, ${auth.usuario?.nombre ?? 'tutor'}'),
-        actions: [
-          IconButton(
-            tooltip: 'Cerrar sesión',
-            icon: const Icon(Icons.logout),
-            onPressed: () => auth.cerrarSesion(context),
-          ),
-        ],
-      ),
-      // Menú circular para cambiar entre tema claro, oscuro y alto contraste.
-      body: MenuTema(
-        // En tablet o escritorio el contenido no se estira de lado a lado.
-        contenido: ContenidoCentrado(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 72,
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.accessibility_new, size: 32),
-                  label: const Text('Iniciar modo alumno'),
-                  onPressed: () => Navigator.pushNamed(context, '/alumno'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.pan_tool_alt),
-                label: const Text('Ir directo a explorar'),
-                onPressed: () => Navigator.pushNamed(context, '/explorar'),
-              ),
-              const SizedBox(height: 8),
-              TextButton.icon(
-                icon: const Icon(Icons.replay),
-                label: const Text('Ver la bienvenida otra vez'),
-                // Reemplaza el inicio para que no se acumulen pantallas.
-                onPressed: () =>
-                    Navigator.pushReplacementNamed(context, '/onboarding'),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
