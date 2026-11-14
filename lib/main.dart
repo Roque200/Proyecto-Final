@@ -1,13 +1,16 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'components/voz.dart';
+import 'config/supabase_config.dart';
 import 'firebase_options.dart';
 import 'pages/explorar_page.dart';
 import 'pages/menu_alumno_page.dart';
 import 'pages/reto_page.dart';
+import 'providers/alumno_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/explorar_provider.dart';
 import 'providers/menu_alumno_provider.dart';
@@ -19,6 +22,8 @@ import 'providers/tema_provider.dart';
 import 'screens/dash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/perfil_screen.dart';
+import 'screens/progreso_screen.dart';
 import 'screens/recuperar_screen.dart';
 import 'screens/registro_screen.dart';
 import 'screens/verificar_screen.dart';
@@ -28,6 +33,11 @@ Future<void> main() async {
   // Conecta la app con el proyecto pulsso-4dd5f (configuración generada
   // por flutterfire configure en firebase_options.dart).
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Supabase solo se usa para guardar las fotos de perfil (Storage).
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
   final prefs = await SharedPreferences.getInstance();
   await Voz.inicializar();
   final onboardingVisto = prefs.getBool(OnboardingProvider.claveVisto) ?? false;
@@ -38,6 +48,7 @@ Future<void> main() async {
         Provider<SharedPreferences>.value(value: prefs),
         ChangeNotifierProvider(create: (_) => TemaProvider(prefs)),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AlumnoProvider(prefs)),
         ChangeNotifierProvider(create: (_) => ProgresoProvider()),
         ChangeNotifierProvider(create: (_) => PlanProvider()),
       ],
@@ -83,6 +94,8 @@ class MyApp extends StatelessWidget {
         '/recuperar': (context) => const RecuperarScreen(),
         // Dashboard del tutor: pantalla principal después de iniciar sesión.
         '/': (context) => const DashScreen(),
+        '/progreso': (context) => const ProgresoScreen(),
+        '/perfil': (context) => const PerfilScreen(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),

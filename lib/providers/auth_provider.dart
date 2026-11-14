@@ -4,7 +4,11 @@ import 'dart:io' show Platform;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FileOptions, StorageException, Supabase;
 
+import '../config/supabase_config.dart';
 import '../firebase_options.dart';
 
 enum Proveedor { correo, google, github }
@@ -166,6 +170,10 @@ class AuthProvider extends ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) _mostrar(context, _mensaje(e.code));
       return false;
+    } on StorageException catch (e) {
+      // Errores de Supabase Storage al subir la foto.
+      if (context.mounted) _mostrar(context, 'No se pudo subir la foto (${e.message})');
+      return false;
     } on GoogleSignInException catch (e) {
       // Si el tutor cerró la ventana de Google no es un error: no se avisa nada.
       if (e.code != GoogleSignInExceptionCode.canceled && context.mounted) {
@@ -287,6 +295,40 @@ class AuthProvider extends ChangeNotifier {
     } else {
       _mostrar(context, 'Todavía no confirmas el correo. Revisa tu bandeja o el spam.');
     }
+  }
+
+  /// Solo las cuentas de correo pueden cambiar su foto: en Google y GitHub
+  /// la foto la administra el proveedor.
+  ///
+  /// La imagen se sube a Supabase Storage (bucket "avatares") en
+  /// {uid}/{fecha}.jpg y su URL pública se guarda en el perfil de Firebase
+  /// con updatePhotoURL. Un nombre nuevo cada vez cambia la URL, así la caché
+  /// de imágenes no muestra la foto anterior. userChanges() avisa del cambio
+  /// y el avatar se actualiza solo en el dashboard, el drawer y el perfil.
+  Future<void> cambiarFoto(BuildContext context, ImageSource origen) async {
+    final u = _auth.currentUser;
+    if (u == null || !(usuario?.puedeEditarFoto ?? false)) return;
+
+    final archivo = await ImagePicker().pickImage(
+      source: origen,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 80,
+    );
+    if (archivo == null || !context.mounted) return; // el tutor canceló
+
+    final ok = await _ejecutar(context, () async {
+      final bytes = await archivo.readAsBytes();
+      final ruta = '${u.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final bucket = Supabase.instance.client.storage.from(SupabaseConfig.bucketAvatares);
+      await bucket.uploadBinary(
+        ruta,
+        bytes,
+        fileOptions: const FileOptions(contentType: 'image/jpeg'),
+      );
+      await u.updatePhotoURL(bucket.getPublicUrl(ruta));
+    });
+    if (ok && context.mounted) _mostrar(context, 'Foto actualizada');
   }
 
   /// Firebase manda un enlace para que el tutor cree una contraseña nueva.

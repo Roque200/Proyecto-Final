@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,12 +17,13 @@ class AvatarUsuario extends StatelessWidget {
     final colores = Theme.of(context).colorScheme;
     final foto = usuario?.fotoUrl;
 
-    // En la semana 2 la foto del proveedor se muestra con cached_network_image.
+    // CachedNetworkImageProvider guarda la foto en el celular: la próxima vez
+    // se muestra al instante y también funciona sin internet.
     return CircleAvatar(
       radius: radio,
       backgroundColor: colores.primaryContainer,
       foregroundColor: colores.onPrimaryContainer,
-      backgroundImage: foto != null ? NetworkImage(foto) : null,
+      backgroundImage: foto != null ? CachedNetworkImageProvider(foto) : null,
       child: foto == null
           ? Text(
               usuario?.iniciales ?? '?',
