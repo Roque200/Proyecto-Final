@@ -22,6 +22,7 @@ import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
 import 'screens/dash_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/notificaciones_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/perfil_screen.dart';
 import 'screens/progreso_screen.dart';
@@ -106,6 +107,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const DashScreen(),
         '/progreso': (context) => const ProgresoScreen(),
         '/perfil': (context) => const PerfilScreen(),
+        '/notificaciones': (context) => const NotificacionesScreen(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),
