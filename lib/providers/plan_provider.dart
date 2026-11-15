@@ -1,132 +1,121 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/figura.dart';
 import '../models/plan.dart';
 
-enum ResultadoPago { aprobado, rechazado }
-
-/// Planes y pago del prototipo (solo interfaz).
-/// En la semana 3 el pago se manda a Stripe en modo prueba.
+/// Plan de suscripción del tutor (Básico, Escolar o Institución).
+///
+/// Se guarda en Firestore, en el campo `plan` del documento usuarios/{uid}.
+/// Así el plan se conserva aunque el tutor cambie de celular.
 class PlanProvider extends ChangeNotifier {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  StreamSubscription<User?>? _subAuth;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _subDoc;
+
+  String? _uid;
   int _planActual = 0;
   Plan? _seleccionado;
-  bool _procesando = false;
-  ResultadoPago? _resultado;
+  bool _guardando = false;
 
-  // Campos de la tarjeta
-  String titular = '';
-  String numero = '';
-  String vencimiento = '';
-  String cvc = '';
-  final Map<String, String> _errores = {};
+  /// Sin internet, Firestore guarda el cambio para mandarlo después y el
+  /// Future no termina; con este límite la pantalla no se queda cargando.
+  static const Duration _espera = Duration(seconds: 10);
+
+  PlanProvider() {
+    _subAuth = FirebaseAuth.instance.authStateChanges().listen(_cambioDeUsuario);
+  }
+
+  DocumentReference<Map<String, dynamic>>? get _doc {
+    final uid = _uid;
+    return uid == null ? null : _db.collection('usuarios').doc(uid);
+  }
+
+  void _cambioDeUsuario(User? usuario) {
+    if (usuario?.uid == _uid) return;
+    _uid = usuario?.uid;
+    _subDoc?.cancel();
+    _planActual = 0;
+    _seleccionado = null;
+    notifyListeners();
+
+    final doc = _doc;
+    if (doc == null) return;
+    _subDoc = doc.snapshots().listen((snap) {
+      final nivel = (snap.data()?['plan'] as num?)?.toInt() ?? 0;
+      _planActual = nivel.clamp(0, Plan.planes.length - 1);
+      notifyListeners();
+    }, onError: (Object e) => debugPrint('Plan: no se pudo leer ($e)'));
+  }
 
   int get planActual => _planActual;
   Plan get plan => Plan.planes[_planActual];
+
+  /// Plan de pago que el tutor eligió y que se muestra en la pantalla de pago.
   Plan? get seleccionado => _seleccionado;
-  bool get procesando => _procesando;
-  ResultadoPago? get resultado => _resultado;
-  String? error(String campo) => _errores[campo];
+  bool get guardando => _guardando;
 
   List<Figura> get figurasDisponibles =>
       Figura.catalogo.where((f) => f.planRequerido <= _planActual).toList();
 
   bool disponible(Figura f) => f.planRequerido <= _planActual;
 
-  void elegir(BuildContext context, Plan nuevo) {
-    if (nuevo.nivel == _planActual) return;
-    if (nuevo.precioMensual == 0) {
-      _planActual = nuevo.nivel;
+  /// El plan gratuito se aplica directo; los de pago van a la pantalla de pago.
+  Future<void> elegir(BuildContext context, Plan nuevo) async {
+    if (nuevo.nivel == _planActual || _guardando) return;
+
+    if (nuevo.precioMensual > 0) {
+      _seleccionado = nuevo;
       notifyListeners();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cambiaste al plan ${nuevo.nombre}')),
-      );
+      Navigator.pushNamed(context, '/pago');
       return;
     }
-    _seleccionado = nuevo;
-    _limpiarTarjeta();
-    Navigator.pushNamed(context, '/pago');
+
+    final ok = await guardarPlan(nuevo.nivel);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Cambiaste al plan ${nuevo.nombre}' : 'No se pudo cambiar el plan'),
+      ),
+    );
   }
 
-  void _limpiarTarjeta() {
-    titular = '';
-    numero = '';
-    vencimiento = '';
-    cvc = '';
-    _errores.clear();
-    _resultado = null;
+  /// Escribe el plan en Firestore. El listener de snapshots actualiza
+  /// _planActual, así toda la app (dashboard, lecciones) se refresca sola.
+  Future<bool> guardarPlan(int nivel, {Map<String, Object>? datosPago}) async {
+    final doc = _doc;
+    if (doc == null) return false;
+    _guardando = true;
     notifyListeners();
-  }
-
-  void reintentar() {
-    _resultado = null;
-    notifyListeners();
-  }
-
-  // ---------------------------------------------------------------- Validación
-
-  bool _validar() {
-    _errores.clear();
-    final digitos = numero.replaceAll(' ', '');
-
-    if (titular.trim().length < 3) {
-      _errores['titular'] = 'Escribe el nombre como aparece en la tarjeta';
-    }
-    if (digitos.length != 16 || !_luhn(digitos)) {
-      _errores['numero'] = 'Número de tarjeta no válido';
-    }
-    if (!_vencimientoValido(vencimiento)) {
-      _errores['vencimiento'] = 'Fecha no válida';
-    }
-    if (!RegExp(r'^\d{3}$').hasMatch(cvc)) {
-      _errores['cvc'] = '3 dígitos';
-    }
-    notifyListeners();
-    return _errores.isEmpty;
-  }
-
-  static bool _luhn(String digitos) {
-    var suma = 0;
-    var doble = false;
-    for (var i = digitos.length - 1; i >= 0; i--) {
-      var d = int.parse(digitos[i]);
-      if (doble) {
-        d *= 2;
-        if (d > 9) d -= 9;
+    try {
+      await doc.set({
+        'plan': nivel,
+        'planActualizado': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(_espera);
+      if (datosPago != null) {
+        // Historial de pagos en usuarios/{uid}/pagos.
+        await doc.collection('pagos').add({
+          ...datosPago,
+          'fecha': FieldValue.serverTimestamp(),
+        }).timeout(_espera);
       }
-      suma += d;
-      doble = !doble;
+      return true;
+    } catch (e) {
+      debugPrint('Plan: no se pudo guardar ($e)');
+      return false;
+    } finally {
+      _guardando = false;
+      notifyListeners();
     }
-    return suma % 10 == 0;
   }
 
-  static bool _vencimientoValido(String texto) {
-    final m = RegExp(r'^(\d{2})/(\d{2})$').firstMatch(texto);
-    if (m == null) return false;
-    final mes = int.parse(m.group(1)!);
-    final anio = 2000 + int.parse(m.group(2)!);
-    if (mes < 1 || mes > 12) return false;
-    final ultimoDia = DateTime(anio, mes + 1, 0, 23, 59);
-    return ultimoDia.isAfter(DateTime.now());
-  }
-
-  // ---------------------------------------------------------------- Pago
-
-  /// Tarjetas de prueba de Stripe:
-  /// 4242 4242 4242 4242 = aprobada, 4000 0000 0000 0002 = rechazada.
-  Future<void> pagar() async {
-    final plan = _seleccionado;
-    if (plan == null || !_validar()) return;
-    _procesando = true;
-    notifyListeners();
-    await Future.delayed(const Duration(seconds: 2));
-    _procesando = false;
-    final rechazada = numero.replaceAll(' ', '') == '4000000000000002';
-    if (rechazada) {
-      _resultado = ResultadoPago.rechazado;
-    } else {
-      _resultado = ResultadoPago.aprobado;
-      _planActual = plan.nivel;
-    }
-    notifyListeners();
+  @override
+  void dispose() {
+    _subAuth?.cancel();
+    _subDoc?.cancel();
+    super.dispose();
   }
 }

@@ -25,6 +25,7 @@ import 'screens/login_screen.dart';
 import 'screens/notificaciones_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/perfil_screen.dart';
+import 'screens/planes_screen.dart';
 import 'screens/progreso_screen.dart';
 import 'screens/recuperar_screen.dart';
 import 'screens/registro_screen.dart';
@@ -108,6 +109,7 @@ class MyApp extends StatelessWidget {
         '/progreso': (context) => const ProgresoScreen(),
         '/perfil': (context) => const PerfilScreen(),
         '/notificaciones': (context) => const NotificacionesScreen(),
+        '/planes': (context) => const PlanesScreen(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),
