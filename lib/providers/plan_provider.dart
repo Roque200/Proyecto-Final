@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
+import '../config/stripe_config.dart';
 import '../models/figura.dart';
 import '../models/plan.dart';
+
+enum ResultadoPago { aprobado, rechazado }
 
 /// Plan de suscripción del tutor (Básico, Escolar o Institución).
 ///
@@ -20,6 +24,12 @@ class PlanProvider extends ChangeNotifier {
   int _planActual = 0;
   Plan? _seleccionado;
   bool _guardando = false;
+
+  // Estado de la pantalla de pago
+  CardFieldInputDetails? _tarjeta;
+  bool _procesando = false;
+  ResultadoPago? _resultado;
+  String? _mensajePago;
 
   /// Sin internet, Firestore guarda el cambio para mandarlo después y el
   /// Future no termina; con este límite la pantalla no se queda cargando.
@@ -58,6 +68,11 @@ class PlanProvider extends ChangeNotifier {
   Plan? get seleccionado => _seleccionado;
   bool get guardando => _guardando;
 
+  bool get tarjetaCompleta => _tarjeta?.complete ?? false;
+  bool get procesando => _procesando;
+  ResultadoPago? get resultado => _resultado;
+  String? get mensajePago => _mensajePago;
+
   List<Figura> get figurasDisponibles =>
       Figura.catalogo.where((f) => f.planRequerido <= _planActual).toList();
 
@@ -69,6 +84,9 @@ class PlanProvider extends ChangeNotifier {
 
     if (nuevo.precioMensual > 0) {
       _seleccionado = nuevo;
+      _tarjeta = null;
+      _resultado = null;
+      _mensajePago = null;
       notifyListeners();
       Navigator.pushNamed(context, '/pago');
       return;
@@ -108,6 +126,79 @@ class PlanProvider extends ChangeNotifier {
       return false;
     } finally {
       _guardando = false;
+      notifyListeners();
+    }
+  }
+
+  // ---------------------------------------------------------------- Pago
+
+  /// El CardField de Stripe avisa cada vez que cambia la tarjeta. Solo
+  /// recibimos si está completa y válida, y sus últimos 4 dígitos: el
+  /// número completo nunca llega a nuestro código.
+  void cambiarTarjeta(CardFieldInputDetails? detalles) {
+    _tarjeta = detalles;
+    notifyListeners();
+  }
+
+  void reintentar() {
+    // El CardField se vuelve a crear vacío, así que la tarjeta anterior
+    // ya no cuenta.
+    _tarjeta = null;
+    _resultado = null;
+    _mensajePago = null;
+    notifyListeners();
+  }
+
+  /// Stripe tokeniza la tarjeta y regresa un PaymentMethod (pm_...): un
+  /// identificador seguro que representa la tarjeta sin exponer sus datos.
+  ///
+  /// Para cobrar de verdad se necesita un servidor con la clave secreta que
+  /// cree un PaymentIntent; como el proyecto es sin backend, aquí el cobro
+  /// se simula y se guarda el plan con los datos del PaymentMethod.
+  Future<void> pagar({required String nombre, required String correo}) async {
+    final plan = _seleccionado;
+    if (plan == null || !tarjetaCompleta || _procesando) return;
+
+    _procesando = true;
+    _resultado = null;
+    _mensajePago = null;
+    notifyListeners();
+
+    try {
+      final metodo = await Stripe.instance.createPaymentMethod(
+        params: PaymentMethodParams.card(
+          paymentMethodData: PaymentMethodData(
+            billingDetails: BillingDetails(name: nombre, email: correo),
+          ),
+        ),
+      );
+
+      // Simulación del rechazo del banco con la tarjeta de prueba ...0002.
+      if (metodo.card.last4 == StripeConfig.terminacionRechazada) {
+        _resultado = ResultadoPago.rechazado;
+        _mensajePago = 'El banco rechazó la tarjeta. Revisa los datos o usa otra.';
+        return;
+      }
+
+      final ok = await guardarPlan(plan.nivel, datosPago: {
+        'plan': plan.nombre,
+        'monto': plan.precioMensual,
+        'moneda': 'MXN',
+        'paymentMethodId': metodo.id,
+        'marca': metodo.card.brand ?? '',
+        'ultimos4': metodo.card.last4 ?? '',
+        'modo': 'prueba',
+      });
+      _resultado = ok ? ResultadoPago.aprobado : ResultadoPago.rechazado;
+      if (!ok) _mensajePago = 'El pago pasó, pero no se pudo guardar el plan. Revisa tu conexión.';
+    } on StripeException catch (e) {
+      _resultado = ResultadoPago.rechazado;
+      _mensajePago = e.error.localizedMessage ?? 'No se pudo procesar la tarjeta.';
+    } catch (_) {
+      _resultado = ResultadoPago.rechazado;
+      _mensajePago = 'No se pudo conectar con Stripe. Revisa tu conexión.';
+    } finally {
+      _procesando = false;
       notifyListeners();
     }
   }

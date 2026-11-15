@@ -1,11 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' show Stripe;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'components/notificaciones_push.dart';
 import 'components/voz.dart';
+import 'config/stripe_config.dart';
 import 'config/supabase_config.dart';
 import 'firebase_options.dart';
 import 'pages/explorar_page.dart';
@@ -24,6 +26,7 @@ import 'screens/dash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notificaciones_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/pago_screen.dart';
 import 'screens/perfil_screen.dart';
 import 'screens/planes_screen.dart';
 import 'screens/progreso_screen.dart';
@@ -43,6 +46,9 @@ Future<void> main() async {
   );
   // Notificaciones con la app en segundo plano o cerrada.
   NotificacionesPush.registrarSegundoPlano();
+  // Stripe en modo de prueba, con la clave publicable.
+  Stripe.publishableKey = StripeConfig.publishableKey;
+  await Stripe.instance.applySettings();
   final prefs = await SharedPreferences.getInstance();
   await Voz.inicializar();
   final onboardingVisto = prefs.getBool(OnboardingProvider.claveVisto) ?? false;
@@ -110,6 +116,7 @@ class MyApp extends StatelessWidget {
         '/perfil': (context) => const PerfilScreen(),
         '/notificaciones': (context) => const NotificacionesScreen(),
         '/planes': (context) => const PlanesScreen(),
+        '/pago': (context) => const PagoScreen(),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),
