@@ -1,5 +1,5 @@
-/// Un lugar de apoyo para niñas y niños con discapacidad visual
-/// (escuelas de educación especial, centros de rehabilitación, etc.).
+/// Un lugar de apoyo para niñas, niños y familias
+/// (atención médica, asistencia social y actividades culturales).
 class CentroApoyo {
   final String id;
   final String nombre;
@@ -17,35 +17,33 @@ class CentroApoyo {
     required this.longitud,
   });
 
-  /// Lista de centros que muestra el mapa.
-  ///
-  /// IMPORTANTE: son datos de EJEMPLO. Antes de la entrega reemplázalos por
-  /// centros reales: en Google Maps mantén presionado el lugar y copia las
-  /// coordenadas (latitud, longitud) que aparecen arriba.
+  /// Centros de atención en Apaseo el Grande, Gto., que muestra el mapa.
   static const List<CentroApoyo> lista = [
     CentroApoyo(
-      id: 'celaya_centro',
-      nombre: 'Centro de apoyo visual Celaya (ejemplo)',
-      direccion: 'Zona Centro, Celaya, Gto.',
-      telefono: '461 000 0000',
-      latitud: 20.5235,
-      longitud: -100.8157,
+      id: 'dif_apaseo',
+      nombre: 'DIF Municipal Apaseo el Grande',
+      direccion: 'Calle Morelos 542, Zona Centro, 38160 Apaseo el Grande, Gto.',
+      telefono: '413 158 2483',
+      latitud: 20.543879,
+      longitud: -100.680268,
     ),
     CentroApoyo(
-      id: 'celaya_norte',
-      nombre: 'Escuela de educación especial (ejemplo)',
-      direccion: 'Celaya, Gto.',
-      telefono: '461 000 0001',
-      latitud: 20.5480,
-      longitud: -100.8090,
+      id: 'caises_apaseo',
+      nombre: 'CAISES Apaseo el Grande',
+      direccion:
+          'Calle La Adelita 105–137, Los Charros, 38164 Apaseo el Grande, Gto.',
+      telefono: '413 688 2509',
+      latitud: 20.545299,
+      longitud: -100.679092,
     ),
     CentroApoyo(
-      id: 'apaseo',
-      nombre: 'Unidad de rehabilitación Apaseo el Grande (ejemplo)',
-      direccion: 'Apaseo el Grande, Gto.',
-      telefono: '413 000 0000',
-      latitud: 20.5464,
-      longitud: -100.6847,
+      id: 'casa_cultura_apaseo',
+      nombre: 'Casa de la Cultura Poeta Antonio Plaza',
+      direccion:
+          'Calle José María Morelos 308, Zona Centro, 38160 Apaseo el Grande, Gto.',
+      telefono: 'Teléfono no disponible',
+      latitud: 20.545948,
+      longitud: -100.684698,
     ),
   ];
 }
