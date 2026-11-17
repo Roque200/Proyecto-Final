@@ -32,9 +32,8 @@ class ExplorarPage extends StatelessWidget {
                         Expanded(
                           child: Text(
                             nombre,
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                ),
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(fontWeight: FontWeight.w900),
                           ),
                         ),
                         Text(
@@ -52,12 +51,14 @@ class ExplorarPage extends StatelessWidget {
                           builder: (context, area) {
                             final tamano = Size(area.maxWidth, area.maxHeight);
                             return Semantics(
-                              label: 'Área de exploración. $nombre. '
+                              label:
+                                  'Área de exploración. $nombre. '
                                   'Desliza un dedo para sentir la figura.',
                               child: GestureDetector(
                                 behavior: HitTestBehavior.opaque,
                                 onScaleStart: (d) {
-                                  if (d.pointerCount == 1) prov.tocar(d.localFocalPoint, tamano);
+                                  if (d.pointerCount == 1)
+                                    prov.tocar(d.localFocalPoint, tamano);
                                 },
                                 onScaleUpdate: (d) {
                                   if (d.pointerCount == 1) {
@@ -71,16 +72,17 @@ class ExplorarPage extends StatelessWidget {
                                   prov.soltar();
                                 },
                                 onLongPress: prov.informacion,
-                                onDoubleTap: prov.reiniciarRotacion,
+                                onDoubleTap: prov.instrucciones,
                                 child: CustomPaint(
                                   size: tamano,
                                   painter: FiguraPainter(
                                     figura: figura,
-                                    rotacion: prov.rotacion,
                                     dedo: prov.dedo,
                                     resaltado: prov.resaltado,
                                     colorLinea: colores.primary,
-                                    colorRelleno: colores.primary.withValues(alpha: 0.12),
+                                    colorRelleno: colores.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     colorResaltado: Colors.white,
                                   ),
                                 ),
@@ -96,7 +98,7 @@ class ExplorarPage extends StatelessWidget {
                     child: Text(
                       prov.resaltado?.descripcion ??
                           'Mantén presionado: información · Dos dedos: cambiar figura · '
-                              'Doble toque: enderezar',
+                              'Doble toque o agitar: repetir',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
