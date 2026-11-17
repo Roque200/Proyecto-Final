@@ -32,3 +32,6 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# Archivos que Xcode genera al resolver paquetes de Swift (no se versionan)
+**/xcshareddata/swiftpm/
