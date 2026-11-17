@@ -16,6 +16,7 @@ import 'pages/reto_page.dart';
 import 'providers/alumno_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/explorar_provider.dart';
+import 'providers/mapa_provider.dart';
 import 'providers/menu_alumno_provider.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/plan_provider.dart';
@@ -24,6 +25,7 @@ import 'providers/reto_provider.dart';
 import 'providers/tema_provider.dart';
 import 'screens/dash_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/mapa_screen.dart';
 import 'screens/notificaciones_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/pago_screen.dart';
@@ -117,6 +119,11 @@ class MyApp extends StatelessWidget {
         '/notificaciones': (context) => const NotificacionesScreen(),
         '/planes': (context) => const PlanesScreen(),
         '/pago': (context) => const PagoScreen(),
+        // El provider del mapa vive solo mientras la pantalla está abierta.
+        '/mapa': (context) => ChangeNotifierProvider(
+              create: (_) => MapaProvider(),
+              child: const MapaScreen(),
+            ),
         '/alumno': (context) => ChangeNotifierProvider(
           create: (_) => MenuAlumnoProvider()..iniciar(),
           child: const MenuAlumnoPage(),
@@ -141,7 +148,7 @@ class MyApp extends StatelessWidget {
           child: const RetoPage(),
         ),
       },
-      // Rutas que todavía no existen (perfil, planes, mapa...)
+      // Cualquier ruta desconocida muestra un aviso en lugar de tronar.
       onUnknownRoute: (settings) => MaterialPageRoute(
         settings: settings,
         builder: (context) => EnConstruccion(ruta: settings.name ?? ''),

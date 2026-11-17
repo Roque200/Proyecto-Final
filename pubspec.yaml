@@ -35,6 +35,8 @@ dependencies:
   cloud_firestore: ^7.1.0
   firebase_messaging: ^17.0.1
   flutter_stripe: ^15.0.0
+  google_maps_flutter: ^2.19.0
+  geolocator: ^14.1.2
 
 dev_dependencies:
   flutter_test:

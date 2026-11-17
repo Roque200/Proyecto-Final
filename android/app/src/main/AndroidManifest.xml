@@ -2,8 +2,11 @@
 
     <!-- Vibración del modo alumno -->
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <!-- Google Fonts descarga la tipografía la primera vez -->
+    <!-- Internet: Firebase, Supabase, Stripe y los mapas de Google -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Ubicación del tutor para los centros de apoyo más cercanos (geolocator) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="Pulssó"
@@ -31,6 +34,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- API key de Google Maps (Maps SDK for Android). Está restringida en
+             Google Cloud a esta app (paquete + huella SHA-1). -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA69Yg-0poHB1Wew7WKP_2oaT-_5xXNp9k"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
